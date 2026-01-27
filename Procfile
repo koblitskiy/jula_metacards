@@ -1,1 +1,1 @@
-worker: python jula_metacards/bot.py
+worker: python bot.py

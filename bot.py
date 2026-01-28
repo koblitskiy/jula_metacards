@@ -10,7 +10,7 @@ from aiogram.types import (
 )
 from aiogram.filters import Command
 
-TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН_БОТА"
+TOKEN = "8324589135:AAHH1IVFYvq8NDy116bR2dGyqsft9sbQSX0"
 IGROPRACTIC_ID = 123456789  # ← ID игропрактика
 
 CARDS_FOLDER = "cards"
@@ -96,3 +96,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

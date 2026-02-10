@@ -50,7 +50,7 @@ active_users = {}  # user_id → username
 @dp.message(Command(commands=["start", "play"]))
 async def start_game(message: types.Message, state: FSMContext):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔔 Перейти в канал", url=CHANNEL_URL)],
+        [InlineKeyboardButton(text="🔔 Перейти в канал", url="https://t.me/tigra_jula")],
         [InlineKeyboardButton(text="✅ Я подписался", callback_data="check_sub")]
     ])
     await message.answer(
@@ -198,4 +198,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 

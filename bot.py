@@ -13,7 +13,7 @@ from aiogram.client.bot import DefaultBotProperties
 
 # ================== НАСТРОЙКИ ==================
 BOT_TOKEN = "8480568700:AAEOABkovhrTSwcFhmjIRLKFHAIKS7p33cY"
-PRACTITIONER_ID = 1069396612  # ← твой Telegram ID
+PRACTITIONER_ID = 575159735  # ← твой Telegram ID
 CHANNEL_URL = "https://t.me/mac_jula_bot"
 CHANNEL_ID = "@belike_jula"
 
@@ -198,5 +198,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 

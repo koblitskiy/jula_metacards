@@ -12,10 +12,10 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
 
 # ================== НАСТРОЙКИ ==================
-BOT_TOKEN = "8324589135:AAHH1IVFYvq8NDy116bR2dGyqsft9sbQSX0"
+BOT_TOKEN = "8480568700:AAEOABkovhrTSwcFhmjIRLKFHAIKS7p33cY"
 PRACTITIONER_ID = 1069396612  # ← твой Telegram ID
-CHANNEL_URL = "https://t.me/tigra_jula"
-CHANNEL_ID = "@koblitskiy"
+CHANNEL_URL = "https://t.me/mac_jula_bot"
+CHANNEL_ID = "@belike_jula"
 
 # Корневая папка с картами
 CARDS_PATH = os.path.join(os.path.dirname(__file__), "cards")
@@ -198,3 +198,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

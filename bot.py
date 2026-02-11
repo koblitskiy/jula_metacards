@@ -53,21 +53,21 @@ main_menu_kb = ReplyKeyboardMarkup(
 # ---------------- Подменю ----------------
 menu_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🃏 Взять карту", callback_data="menu_card")],
-    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/YOUR_USERNAME")],
-    [InlineKeyboardButton(text="🔗 Перейти на канал", url=CHANNEL_URL)],
+    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/belike_jula")],
+    [InlineKeyboardButton(text="🔗 Перейти на канал", url="https://t.me/tigra_jula")],
     [InlineKeyboardButton(text="🎮 Записаться на игру", callback_data="menu_game")]
 ])
 
 # ---------------- Кнопка после карты ----------------
 card_questions_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/YOUR_USERNAME")]
+    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/belike_jula")]
 ])
 
 # ================= Начало =================
 @dp.message(Command(commands=["start", "play"]))
 async def start_game(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔔 Перейти в канал", url=CHANNEL_URL)],
+        [InlineKeyboardButton(text="🔔 Перейти в канал", url="https://t.me/tigra_jula")],
         [InlineKeyboardButton(text="✅ Я подписался", callback_data="check_sub")]
     ])
     await message.answer(
@@ -141,7 +141,7 @@ async def send_card(callback: types.CallbackQuery, state: FSMContext):
 
     # Показываем 3 вопроса с описанием вместо поля ввода
     questions_text = (
-        "Вопрос 1\nВопрос 2\nВопрос 3\n\n"
+        "Ты чо?\nТы кто?\nНах тебе это?\n\n"
         "Описание: карта дана вам не просто так — она точно что-то для вас значит. "
         "Если самому понять сложно, давай разберемся вместе."
     )
@@ -173,3 +173,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

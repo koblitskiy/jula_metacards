@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
@@ -43,9 +43,12 @@ SPHERES = {
 active_users = {}  # user_id → username
 
 # ---------------- Главное меню ----------------
-main_menu_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="📋 Меню", callback_data="open_menu")]
-])
+main_menu_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="📋 Меню")]
+    ],
+    resize_keyboard=True
+)
 
 # ---------------- Подменю ----------------
 menu_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -73,6 +76,8 @@ async def start_game(message: types.Message):
         "Чтобы продолжить, подпишись на канал 👇",
         reply_markup=keyboard
     )
+    # Показываем кнопку меню
+    await message.answer("Главное меню:", reply_markup=main_menu_kb)
 
 # ---------------- Проверка подписки ----------------
 @dp.callback_query(lambda c: c.data == "check_sub")
@@ -143,13 +148,12 @@ async def send_card(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(questions_text, reply_markup=card_questions_kb)
 
 # ---------------- Подменю "Меню" ----------------
-@dp.callback_query(lambda c: c.data == "open_menu")
-async def open_menu(callback: types.CallbackQuery):
-    await callback.message.answer("Выберите действие 👇", reply_markup=menu_kb)
+@dp.message(lambda m: m.text == "📋 Меню")
+async def open_menu(message: types.Message):
+    await message.answer("Выберите действие 👇", reply_markup=menu_kb)
 
 @dp.callback_query(lambda c: c.data == "menu_card")
 async def menu_get_card(callback: types.CallbackQuery):
-    # Просто перенаправляем пользователя к выбору сферы
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=name, callback_data=f"sphere_{key}")]

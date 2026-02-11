@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, ForceReply
 from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
@@ -15,7 +15,6 @@ from aiogram.client.bot import DefaultBotProperties
 BOT_TOKEN = "8480568700:AAEOABkovhrTSwcFhmjIRLKFHAIKS7p33cY"
 PRACTITIONER_ID = 575159735  # ← твой Telegram ID
 CHANNEL_URL = "https://t.me/mac_jula_bot"
-CHANNEL_ID = "@belike_jula"
 CARDS_PATH = os.path.join(os.path.dirname(__file__), "cards")
 
 bot = Bot(
@@ -37,6 +36,13 @@ SPHERES = {
     "health": "🧘 Здоровье",
     "move": "🌍 Переезд",
     "finance": "💰 Финансы"
+}
+
+# ---------------- Игры ----------------
+GAMES = {
+    "abundance": "🔑 Ключ к изобилию",
+    "inner_map": "🗺 Карта внутреннего мира",
+    "advice": "💡 Нужен совет"
 }
 
 # ---------------- Активные пользователи ----------------
@@ -141,9 +147,8 @@ async def send_card(callback: types.CallbackQuery, state: FSMContext):
 
     # Показываем 3 вопроса с описанием вместо поля ввода
     questions_text = (
-        "Ты чо?\nТы кто?\nНах тебе это?\n\n"
-        "Описание: карта дана вам не просто так — она точно что-то для вас значит. "
-        "Если самому понять сложно, давай разберемся вместе."
+        "Вопрос 1\nВопрос 2\nВопрос 3\n\n"
+        "Описание: карта дана вам не просто так — давайте думайте, решайте, полюбому у вас проблемы с головой или ещё с чем-то."
     )
     await callback.message.answer(questions_text, reply_markup=card_questions_kb)
 
@@ -162,9 +167,51 @@ async def menu_get_card(callback: types.CallbackQuery):
     )
     await callback.message.answer("Выбери сферу для работы:", reply_markup=keyboard)
 
+# ---------------- Кнопка "Записаться на игру" ----------------
 @dp.callback_query(lambda c: c.data == "menu_game")
-async def register_game(callback: types.CallbackQuery):
-    await callback.message.answer("🎮 Вы успешно записались на игру! Мы свяжемся с вами для подтверждения.")
+async def menu_game(callback: types.CallbackQuery):
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=name, callback_data=f"game_{key}")]
+            for key, name in GAMES.items()
+        ]
+    )
+    await callback.message.answer("Выберите игру, в которой хотите принять участие:", reply_markup=keyboard)
+
+# ---------------- Выбор конкретной игры ----------------
+@dp.callback_query(lambda c: c.data.startswith("game_"))
+async def choose_game(callback: types.CallbackQuery):
+    game_key = callback.data.replace("game_", "")
+    game_name = GAMES.get(game_key, "Неизвестная игра")
+
+    user_id = callback.from_user.id
+    username = callback.from_user.username or str(user_id)
+    active_users[user_id] = username  # сохраняем для ответа
+
+    # Сообщение клиенту
+    await callback.message.answer("Вы на пути к лучшей версии себя, скоро отвечу!")
+
+    # Сообщение игропрактику
+    text = (
+        f"🎮 <b>Новый участник игры</b>\n\n"
+        f"👤 Пользователь: @{username} ({user_id})\n"
+        f"🕹 Игра: {game_name}"
+    )
+    reply_kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✏ Ответить пользователю", callback_data=f"reply_game_{user_id}")]
+        ]
+    )
+    await bot.send_message(PRACTITIONER_ID, text, reply_markup=reply_kb)
+
+# ---------------- Игропрактик отвечает ----------------
+@dp.callback_query(lambda c: c.data.startswith("reply_game_"))
+async def reply_game(callback: types.CallbackQuery):
+    user_id = int(callback.data.replace("reply_game_", ""))
+    await callback.message.answer(
+        f"🖊 Напиши ответ пользователю @{active_users.get(user_id, user_id)}:",
+        reply_markup=ForceReply(input_field_placeholder="Введите ответ...")
+    )
 
 # ---------------- Запуск бота ----------------
 async def main():
@@ -173,4 +220,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

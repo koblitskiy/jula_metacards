@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
@@ -16,10 +16,7 @@ BOT_TOKEN = "8480568700:AAEOABkovhrTSwcFhmjIRLKFHAIKS7p33cY"
 PRACTITIONER_ID = 575159735  # ← твой Telegram ID
 CHANNEL_URL = "https://t.me/mac_jula_bot"
 CHANNEL_ID = "@belike_jula"
-
-# Корневая папка с картами
 CARDS_PATH = os.path.join(os.path.dirname(__file__), "cards")
-# ===============================================
 
 bot = Bot(
     token=BOT_TOKEN,
@@ -32,7 +29,6 @@ dp = Dispatcher()
 class UserState(StatesGroup):
     choosing_sphere = State()
     waiting_card = State()
-    waiting_text = State()
 
 # ---------------- Сферы ----------------
 SPHERES = {
@@ -46,11 +42,29 @@ SPHERES = {
 # ---------------- Активные пользователи ----------------
 active_users = {}  # user_id → username
 
-# ---------------- Начало игры ----------------
+# ---------------- Главное меню ----------------
+main_menu_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="📋 Меню", callback_data="open_menu")]
+])
+
+# ---------------- Подменю ----------------
+menu_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="🃏 Взять карту", callback_data="menu_card")],
+    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/YOUR_USERNAME")],
+    [InlineKeyboardButton(text="🔗 Перейти на канал", url=CHANNEL_URL)],
+    [InlineKeyboardButton(text="🎮 Записаться на игру", callback_data="menu_game")]
+])
+
+# ---------------- Кнопка после карты ----------------
+card_questions_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/YOUR_USERNAME")]
+])
+
+# ================= Начало =================
 @dp.message(Command(commands=["start", "play"]))
-async def start_game(message: types.Message, state: FSMContext):
+async def start_game(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔔 Перейти в канал", url="https://t.me/tigra_jula")],
+        [InlineKeyboardButton(text="🔔 Перейти в канал", url=CHANNEL_URL)],
         [InlineKeyboardButton(text="✅ Я подписался", callback_data="check_sub")]
     ])
     await message.answer(
@@ -119,77 +133,34 @@ async def send_card(callback: types.CallbackQuery, state: FSMContext):
             await callback.message.answer("❌ Ошибка: не удалось загрузить карту.")
 
     await state.update_data(card=card_name)
-    await state.set_state(UserState.waiting_text)
 
-    await callback.message.answer(
-        "Напиши, что ты видишь на карте.\n"
-        "Я помогу тебе разобраться."
+    # Показываем 3 вопроса с описанием вместо поля ввода
+    questions_text = (
+        "Вопрос 1\nВопрос 2\nВопрос 3\n\n"
+        "Описание: карта дана вам не просто так — она точно что-то для вас значит. "
+        "Если самому понять сложно, давай разберемся вместе."
     )
+    await callback.message.answer(questions_text, reply_markup=card_questions_kb)
 
-# ---------------- Получение текста пользователя ----------------
-@dp.message(UserState.waiting_text)
-async def get_user_text(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    user_id = message.from_user.id
-    username = message.from_user.username or str(user_id)
+# ---------------- Подменю "Меню" ----------------
+@dp.callback_query(lambda c: c.data == "open_menu")
+async def open_menu(callback: types.CallbackQuery):
+    await callback.message.answer("Выберите действие 👇", reply_markup=menu_kb)
 
-    active_users[user_id] = username
-
-    # Кнопка Force Reply для игропрактика
+@dp.callback_query(lambda c: c.data == "menu_card")
+async def menu_get_card(callback: types.CallbackQuery):
+    # Просто перенаправляем пользователя к выбору сферы
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="Ответить пользователю", callback_data=f"force_reply_{user_id}")]
+            [InlineKeyboardButton(text=name, callback_data=f"sphere_{key}")]
+            for key, name in SPHERES.items()
         ]
     )
+    await callback.message.answer("Выбери сферу для работы:", reply_markup=keyboard)
 
-    text = (
-        f"🔔 <b>Новый запрос</b>\n\n"
-        f"👤 Пользователь: @{username}\n"
-        f"🎯 Сфера: {SPHERES.get(data['sphere'], 'Неизвестно')}\n"
-        f"🎴 Карта: {data['card']}\n\n"
-        f"💬 Ответ:\n{message.text}"
-    )
-
-    await bot.send_message(PRACTITIONER_ID, text, reply_markup=keyboard)
-    await message.answer("Спасибо ✨ Я свяжусь с тобой совсем скоро.")
-    await state.clear()
-
-# ---------------- Игропрактик нажал кнопку "Ответить пользователю" ----------------
-@dp.callback_query(lambda c: c.data.startswith("force_reply_"))
-async def force_reply(callback: types.CallbackQuery):
-    user_id = int(callback.data.replace("force_reply_", ""))
-    await callback.message.answer(
-        f"🖊 Напиши ответ пользователю @{active_users.get(user_id, user_id)}:",
-        reply_markup=ForceReply(input_field_placeholder="Введите ответ...")
-    )
-
-# ---------------- Игропрактик прислал ответ через Force Reply ----------------
-@dp.message()
-async def send_reply(message: types.Message):
-    if not message.reply_to_message:
-        return  # Игнорируем обычные сообщения
-    text = message.text
-    # Определяем user_id из текста reply_to_message
-    reply_text = message.reply_to_message.text
-    # Ищем user_id в тексте
-    import re
-    match = re.search(r'user@?id?:?\s*(\d+)', reply_text)
-    if match:
-        user_id = int(match.group(1))
-    else:
-        # Если не нашли, пробуем по active_users
-        for uid, username in active_users.items():
-            if username in reply_text:
-                user_id = uid
-                break
-        else:
-            return
-
-    try:
-        await bot.send_message(user_id, f"💬 Ответ от игропрактика:\n\n{text}")
-        await message.answer("✅ Ответ успешно отправлен пользователю.")
-    except Exception as e:
-        await message.answer(f"❌ Не удалось отправить сообщение: {e}")
+@dp.callback_query(lambda c: c.data == "menu_game")
+async def register_game(callback: types.CallbackQuery):
+    await callback.message.answer("🎮 Вы успешно записались на игру! Мы свяжемся с вами для подтверждения.")
 
 # ---------------- Запуск бота ----------------
 async def main():
@@ -198,6 +169,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-

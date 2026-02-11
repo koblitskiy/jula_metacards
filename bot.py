@@ -74,7 +74,7 @@ card_questions_kb = InlineKeyboardMarkup(inline_keyboard=[
 async def start_game(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔔 Перейти в канал", url="https://t.me/tigra_jula")],
-        [InlineKeyboardButton(text="✅ Я подписался", callback_data="check_sub")]
+        [InlineKeyboardButton(text="✅ Хочу взять карту", callback_data="check_sub")]
     ])
     await message.answer(
         "Привет ✨\n\n"
@@ -83,7 +83,7 @@ async def start_game(message: types.Message):
         reply_markup=keyboard
     )
     # Показываем кнопку меню
-    await message.answer("Главное меню:", reply_markup=main_menu_kb)
+    await message.answer("Тут есть меню 👇", reply_markup=main_menu_kb)
 
 # ---------------- Проверка подписки ----------------
 @dp.callback_query(lambda c: c.data == "check_sub")
@@ -220,3 +220,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

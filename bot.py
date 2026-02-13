@@ -26,7 +26,7 @@ dp = Dispatcher()
 
 # ---------------- FSM ----------------
 class UserState(StatesGroup):
-    waiting_card = State()
+    waiting_card = State()  # состояние после подготовки
 
 # ---------------- Игры ----------------
 GAMES = {
@@ -48,7 +48,7 @@ main_menu_kb = ReplyKeyboardMarkup(
 
 # ---------------- Подменю ----------------
 menu_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="🎴 Получить карту", callback_data="get_card")],
+    [InlineKeyboardButton(text="🎴 Получить карту", callback_data="prepare_card")],
     [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/belike_jula")],
     [InlineKeyboardButton(text="🔗 Перейти на канал", url="https://t.me/tigra_jula")],
     [InlineKeyboardButton(text="🎮 Записаться на игру", callback_data="menu_game")]
@@ -56,7 +56,8 @@ menu_kb = InlineKeyboardMarkup(inline_keyboard=[
 
 # ---------------- Кнопка после карты ----------------
 card_questions_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/belike_jula")]
+    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/belike_jula")],
+    [InlineKeyboardButton(text="🎴 Получить новую карту", callback_data="prepare_card")]
 ])
 
 # ================= Начало =================
@@ -64,7 +65,7 @@ card_questions_kb = InlineKeyboardMarkup(inline_keyboard=[
 async def start_game(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔔 Перейти в канал", url=CHANNEL_URL)],
-        [InlineKeyboardButton(text="✅ Хочу взять карту", callback_data="get_card")]
+        [InlineKeyboardButton(text="✅ Хочу взять карту", callback_data="prepare_card")]
     ])
     await message.answer(
         "Привет ✨\n\n"
@@ -74,6 +75,21 @@ async def start_game(message: types.Message):
     )
     # Показываем кнопку меню
     await message.answer("Тут есть меню 👇", reply_markup=main_menu_kb)
+
+# ---------------- Этап подготовки перед картой ----------------
+@dp.callback_query(lambda c: c.data == "prepare_card")
+async def prepare_card(callback: types.CallbackQuery):
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🎴 Получить карту", callback_data="get_card")]
+        ]
+    )
+    await callback.message.answer(
+        "🌟 Настройся на получение карты.\n"
+        "Сделай глубокий вдох, сосредоточься на себе и подумай о том, "
+        "что сейчас волнует тебя больше всего.",
+        reply_markup=keyboard
+    )
 
 # ---------------- Получение карты ----------------
 @dp.callback_query(lambda c: c.data == "get_card")
@@ -97,7 +113,7 @@ async def send_card(callback: types.CallbackQuery, state: FSMContext):
 
     await state.update_data(card=card_name)
 
-    # Показываем вопросы после карты
+    # Показываем вопросы после карты + кнопку новой карты
     questions_text = (
         "Вопрос 1\nВопрос 2\nВопрос 3\n\n"
         "Описание: карта дана вам не просто так — давайте думайте, решайте, полюбому у вас проблемы с головой или ещё с чем-то."

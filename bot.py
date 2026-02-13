@@ -14,7 +14,7 @@ from aiogram.client.bot import DefaultBotProperties
 # ================== НАСТРОЙКИ ==================
 BOT_TOKEN = "8480568700:AAEOABkovhrTSwcFhmjIRLKFHAIKS7p33cY"
 PRACTITIONER_ID = 575159735  # ← твой Telegram ID
-CHANNEL_URL = "https://t.me/mac_jula_bot"
+CHANNEL_URL = "https://t.me/tigra_jula"
 CARDS_PATH = os.path.join(os.path.dirname(__file__), "cards")
 
 bot = Bot(
@@ -50,13 +50,14 @@ main_menu_kb = ReplyKeyboardMarkup(
 menu_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🎴 Получить карту", callback_data="prepare_card")],
     [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/belike_jula")],
-    [InlineKeyboardButton(text="🔗 Перейти на канал", url="https://t.me/tigra_jula")],
+    [InlineKeyboardButton(text="🔗 Перейти на канал", url=CHANNEL_URL)],
     [InlineKeyboardButton(text="🎮 Записаться на игру", callback_data="menu_game")]
 ])
 
-# ---------------- Кнопка после карты ----------------
-card_questions_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="✏️ Написать лично", url="https://t.me/belike_jula")],
+# ---------------- Кнопки после карты ----------------
+post_card_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="🔗 Перейти на канал", url=CHANNEL_URL)],
+    [InlineKeyboardButton(text="🎮 Хочу на Т-Игру", callback_data="want_game")],
     [InlineKeyboardButton(text="🎴 Получить новую карту", callback_data="prepare_card")]
 ])
 
@@ -75,7 +76,7 @@ async def start_game(message: types.Message):
     )
     await message.answer("Тут есть меню 👇", reply_markup=main_menu_kb)
 
-# ---------------- Этап подготовки перед картой с UI ----------------
+# ---------------- Этап подготовки перед картой ----------------
 @dp.callback_query(lambda c: c.data == "prepare_card")
 async def prepare_card(callback: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(
@@ -120,16 +121,35 @@ async def send_card(callback: types.CallbackQuery, state: FSMContext):
 
     await state.update_data(card=card_name)
 
-    # ---------------- Профессиональные вопросы после карты ----------------
+    # ---------------- Профессиональные вопросы после карты с атмосферным оформлением ----------------
     questions_text = (
-        "📝 <b>Мини-сессия рефлексии после карты</b>\n\n"
+        "✦✦✦ <b>Мини-сессия рефлексии после карты</b> ✦✦✦\n\n"
         "💭 <b>Вопрос 1:</b> Что первое приходит вам на ум, когда вы смотрите на эту карту?\n\n"
         "💡 <b>Вопрос 2:</b> Какие эмоции или ощущения она у вас вызывает?\n\n"
         "🔍 <b>Вопрос 3:</b> Как эта карта может помочь вам понять текущую ситуацию или сделать следующий шаг?\n\n"
-        "✨ Отвечайте честно себе, без самокритики, и позвольте себе наблюдать свои внутренние реакции."
+        "🌟 <i>Совет:</i> Отвечайте честно себе, без самокритики, наблюдайте свои внутренние реакции.\n"
+        "🕯 Можно сделать небольшой перерыв, вдохнуть глубоко и записать мысли в блокнот."
     )
 
-    await callback.message.answer(questions_text, reply_markup=card_questions_kb)
+    await callback.message.answer(questions_text, reply_markup=post_card_kb)
+
+# ---------------- Обработка нажатия "Хочу на Т-Игру" ----------------
+@dp.callback_query(lambda c: c.data == "want_game")
+async def user_wants_game(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    username = callback.from_user.username or str(user_id)
+
+    text = (
+        f"🎮 <b>Новый запрос на игру</b>\n\n"
+        f"👤 Пользователь: @{username} ({user_id})\n"
+        f"🕹 Запросил участие в Т-Игре"
+    )
+
+    await bot.send_message(PRACTITIONER_ID, text)
+
+    await callback.message.answer(
+        "✅ Ваш запрос отправлен! Скоро с вами свяжется игропрактик."
+    )
 
 # ---------------- Подменю "Меню" ----------------
 @dp.message(lambda m: m.text == "📋 Меню")
@@ -157,10 +177,8 @@ async def choose_game(callback: types.CallbackQuery):
     username = callback.from_user.username or str(user_id)
     active_users[user_id] = username  # сохраняем для ответа
 
-    # Сообщение клиенту
     await callback.message.answer("Вы на пути к лучшей версии себя, скоро отвечу!")
 
-    # Сообщение игропрактику
     text = (
         f"🎮 <b>Новый участник игры</b>\n\n"
         f"👤 Пользователь: @{username} ({user_id})\n"

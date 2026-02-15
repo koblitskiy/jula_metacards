@@ -19,8 +19,8 @@ from aiogram.client.bot import DefaultBotProperties
 
 
 # ================== НАСТРОЙКИ ==================
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-PRACTITIONER_ID = 123456789  # Твой Telegram ID
+BOT_TOKEN = "8480568700:AAEOABkovhrTSwcFhmjIRLKFHAIKS7p33cY"
+PRACTITIONER_ID = 575159735  # Твой Telegram ID
 CHANNEL_URL = "https://t.me/tigra_jula"
 CARDS_PATH = os.path.join(os.path.dirname(__file__), "cards")
 
@@ -253,3 +253,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

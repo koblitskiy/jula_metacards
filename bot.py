@@ -55,9 +55,9 @@ menu_kb = InlineKeyboardMarkup(inline_keyboard=[
 
 # ================== КНОПКИ ПОСЛЕ КАРТЫ ==================
 post_card_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="❓ Задать вопрос по карте", callback_data="ask_question")],
     [InlineKeyboardButton(text="🔗 Перейти на канал", url=CHANNEL_URL)],
     [InlineKeyboardButton(text="🎮 Хочу на Т-Игру", callback_data="want_game")],
-    [InlineKeyboardButton(text="❓ Задать вопрос по карте", callback_data="ask_question")],
     [InlineKeyboardButton(text="🎴 Получить новую карту", callback_data="prepare_card")]
 ])
 
@@ -259,5 +259,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 

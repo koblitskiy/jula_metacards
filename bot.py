@@ -1,37 +1,25 @@
 import os
 import random
 import asyncio
-
 from flask import Flask, request
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    ForceReply
-)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, ForceReply
 from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
 
 # ================== НАСТРОЙКИ ==================
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8480568700:AAEOABkovhrTSwcFhmjIRLKFHAIKS7p33cY")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "ТВОЙ_ТОКЕН_ОТ_BOTFATHER")
 PRACTITIONER_ID = 575159735
 CHANNEL_URL = "https://t.me/tigra_jula"
 CARDS_PATH = os.path.join(os.path.dirname(__file__), "cards")
 
 # ================== ИНИЦИАЛИЗАЦИЯ ==================
-bot = Bot(
-    token=BOT_TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-    session=AiohttpSession()
-)
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML), session=AiohttpSession())
 dp = Dispatcher()
-
 app = Flask(__name__)  # Flask-приложение для webhook
 
 # ================== FSM ==================
@@ -60,16 +48,8 @@ post_card_kb = InlineKeyboardMarkup(inline_keyboard=[
 # ================== ОБРАБОТЧИКИ ==================
 @dp.message(Command(commands=["start"]))
 async def start(message: types.Message):
-    text = (
-        "✨ <b>Добро пожаловать в пространство метафорических карт</b>\n\n"
-        "Это безопасное пространство для самопознания и осознанной работы "
-        "с вашими мыслями, эмоциями и внутренними процессами.\n\n"
-        "Позвольте себе замедлиться и услышать себя."
-    )
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎴 Получить карту", callback_data="prepare_card")]
-    ])
-    await message.answer(text, reply_markup=keyboard)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("🎴 Получить карту", callback_data="prepare_card")]])
+    await message.answer("✨ Добро пожаловать в пространство метафорических карт!", reply_markup=keyboard)
     await message.answer("Меню 👇", reply_markup=main_menu_kb)
 
 @dp.message(lambda m: m.text == "📋 Меню")
@@ -79,25 +59,18 @@ async def open_menu(message: types.Message):
 @dp.callback_query(lambda c: c.data == "prepare_card")
 async def prepare_card(callback: types.CallbackQuery):
     text = (
-        "🧘‍♀️ <b>Настройка перед получением карты</b>\n\n"
-        "Перед тем как получить карту, выполните следующие шаги:\n"
+        "🧘‍♀️ Подготовка перед получением карты:\n"
         "1️⃣ Удобно сядьте и закройте глаза\n"
         "2️⃣ Сделайте несколько глубоких вдохов\n"
         "3️⃣ Сосредоточьтесь на своих ощущениях\n"
         "4️⃣ Подумайте о вопросе, который хотите задать"
     )
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✨ Получить карту", callback_data="get_card")]
-    ])
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("✨ Получить карту", callback_data="get_card")]])
     await callback.message.answer(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "get_card")
 async def send_card(callback: types.CallbackQuery, state: FSMContext):
-    files = [
-        f for f in os.listdir(CARDS_PATH)
-        if f.lower().endswith(('.jpg', '.png'))
-    ] if os.path.exists(CARDS_PATH) else []
-
+    files = [f for f in os.listdir(CARDS_PATH) if f.lower().endswith(('.jpg', '.png'))] if os.path.exists(CARDS_PATH) else []
     if not files:
         await callback.message.answer("❌ В папке cards нет изображений.")
         return
@@ -108,8 +81,7 @@ async def send_card(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(card=card_name)
 
     reflection = (
-        "━━━━━━━━━━━━━━━━━━━\n"
-        "✨ <b>Мини-сессия рефлексии</b>\n"
+        "━━━━━━━━━━━━━━\n✨ Мини-сессия рефлексии\n"
         "💭 Что приходит на ум?\n💡 Эмоции и ощущения\n🔍 Как карта помогает понять ситуацию"
     )
     await callback.message.answer(reflection, reply_markup=post_card_kb)
@@ -124,10 +96,7 @@ async def want_game(callback: types.CallbackQuery):
 @dp.callback_query(lambda c: c.data == "ask_question")
 async def ask_question(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(UserState.waiting_question)
-    await callback.message.answer(
-        "✍️ Напишите ваш вопрос по карте:",
-        reply_markup=ForceReply(input_field_placeholder="Введите вопрос...")
-    )
+    await callback.message.answer("✍️ Напишите ваш вопрос по карте:", reply_markup=ForceReply(input_field_placeholder="Введите вопрос..."))
 
 @dp.message(UserState.waiting_question)
 async def receive_question(message: types.Message, state: FSMContext):
@@ -147,9 +116,7 @@ async def receive_question(message: types.Message, state: FSMContext):
     else:
         await bot.send_message(PRACTITIONER_ID, header)
 
-    reply_kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✏ Ответить пользователю", callback_data=f"reply_{user.id}")]
-    ])
+    reply_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("✏ Ответить пользователю", callback_data=f"reply_{user.id}")]])
     await bot.send_message(PRACTITIONER_ID, "Ответить:", reply_markup=reply_kb)
     await message.answer("✅ Вопрос отправлен.")
     await state.clear()
@@ -162,11 +129,11 @@ async def reply_user(callback: types.CallbackQuery):
 @dp.message(lambda m: m.reply_to_message and "Напишите ответ пользователю" in m.reply_to_message.text)
 async def send_answer(message: types.Message):
     user_id = int(message.reply_to_message.text.split("(")[1].replace("):", "").replace(")", ""))
-    answer = f"━━━━━━━━━━━━━━━━━━━\n✨ Ответ игропрактика\n{message.text}"
+    answer = f"━━━━━━━━━━━━━━\n✨ Ответ игропрактика\n{message.text}"
     after_answer_kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎴 Получить новую карту", callback_data="prepare_card")],
-        [InlineKeyboardButton(text="🎮 Хочу на Т-Игру", callback_data="want_game")],
-        [InlineKeyboardButton(text="🔗 Перейти на канал", url=CHANNEL_URL)]
+        [InlineKeyboardButton("🎴 Получить новую карту", callback_data="prepare_card")],
+        [InlineKeyboardButton("🎮 Хочу на Т-Игру", callback_data="want_game")],
+        [InlineKeyboardButton("🔗 Перейти на канал", url=CHANNEL_URL)]
     ])
     await bot.send_message(user_id, answer, reply_markup=after_answer_kb)
     await message.answer("✅ Ответ отправлен.")
@@ -177,7 +144,3 @@ def webhook():
     update = types.Update(**request.json)
     asyncio.run(dp.process_update(update))
     return "ok"
-
-# ================== ЛОКАЛЬНЫЙ ТЕСТ ==================
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

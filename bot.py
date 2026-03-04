@@ -138,20 +138,4 @@ async def send_answer(message: types.Message):
     await bot.send_message(user_id, answer, reply_markup=after_answer_kb)
     await message.answer("✅ Ответ отправлен.")
 
-# ================== WEBHOOK ==================
-from flask import Flask, request
-from aiogram.types import Update
-import asyncio
 
-app = Flask(__name__)
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    update = Update.model_validate(request.json)
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(dp.feed_update(bot, update))
-    loop.close()
-
-    return "ok"
